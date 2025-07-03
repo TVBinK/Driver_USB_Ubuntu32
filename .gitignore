@@ -1,0 +1,32 @@
+# Build files
+*.ko
+*.o
+*.mod
+*.mod.c
+*.mod.o
+*.symvers
+*.order
+.tmp_versions/
+modules.order
+Module.symvers
+
+# Compiled test program
+test_usb_crypto
+
+# Kernel build files
+.*.cmd
+*.unsigned
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Log files
+*.log
+
+# Backup files
+*.bak
+*.backup 
