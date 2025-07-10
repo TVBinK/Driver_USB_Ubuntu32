@@ -268,12 +268,10 @@ static const struct file_operations usb_crypto_fops = {
 static int ham_ket_noi(struct usb_interface *interface, 
                       const struct usb_device_id *id)
 {
+    // Lấy thông tin USB device từ interface và lưu vào udev
     struct usb_device *udev = interface_to_usbdev(interface);
     int ret = 0;
-    
-    printk(KERN_INFO "usb_crypto: Thiet bi USB ket noi (VID:PID = %04X:%04X)\n",
-           le16_to_cpu(udev->descriptor.idVendor),
-           le16_to_cpu(udev->descriptor.idProduct));
+
     
     mutex_lock(&global_mutex);
     
@@ -292,25 +290,26 @@ static int ham_ket_noi(struct usb_interface *interface,
     }
     
     /* Khởi tạo device structure */
-    crypto_dev->udev = usb_get_dev(udev);
-    crypto_dev->interface = interface;
-    mutex_init(&crypto_dev->mutex);
-    crypto_dev->co_du_lieu = false;
-    crypto_dev->vi_tri = 0;
-    crypto_dev->g_buf_kq = NULL;
-    crypto_dev->kich_thuoc_kq = 0;
+    crypto_dev->udev = usb_get_dev(udev);        // Lưu USB device
+    crypto_dev->interface = interface;           // Lưu USB interface
+    mutex_init(&crypto_dev->mutex);              // Khởi tạo mutex
+    crypto_dev->co_du_lieu = false;              // Chưa có dữ liệu
+    crypto_dev->vi_tri = 0;                      // Vị trí đọc = 0
+    crypto_dev->g_buf_kq = NULL;                 // Buffer kết quả = NULL
+    crypto_dev->kich_thuoc_kq = 0;               // Kích thước = 0
     
-    /* Đăng ký character device */
+    /* Đăng ký character device major/minor number*/
     ret = alloc_chrdev_region(&crypto_dev->dev_num, MINOR_BASE, 1, DEVICE_NAME);
     if (ret < 0) {
         printk(KERN_ERR "usb_crypto: Khong the cap phat major number\n");
         goto error_alloc;
     }
     
-    /* Khởi tạo cdev */
+    /* Khởi tạo character device */
     cdev_init(&crypto_dev->cdev, &usb_crypto_fops);
     crypto_dev->cdev.owner = THIS_MODULE;
     
+    //thêm character device và major/minor number vào kernel
     ret = cdev_add(&crypto_dev->cdev, crypto_dev->dev_num, 1);
     if (ret) {
         printk(KERN_ERR "usb_crypto: Khong the them cdev\n");
@@ -327,7 +326,7 @@ static int ham_ket_noi(struct usb_interface *interface,
         goto error_device;
     }
     
-    /* Lưu con trỏ device vào interface */
+    /* Lưu con trỏ device vào USB interface */
     usb_set_intfdata(interface, crypto_dev);
     
     printk(KERN_INFO "usb_crypto: Thiet bi duoc tao thanh cong tai /dev/crypto%d\n",
@@ -351,6 +350,7 @@ out:
 /* Hàm ngắt kết nối thiết bị USB */
 static void ngat_ket_noi(struct usb_interface *interface)
 {
+    // Lấy con trỏ đến struct usb_crypto_dev từ interface
     struct usb_crypto_dev *dev = usb_get_intfdata(interface);
     
     printk(KERN_INFO "usb_crypto: Thiet bi USB ngat ket noi\n");
@@ -364,7 +364,7 @@ static void ngat_ket_noi(struct usb_interface *interface)
     /* Xóa device file */
     device_destroy(usb_crypto_class, dev->dev_num);
     
-    /* Xóa cdev */
+    /* Xóa character device */
     cdev_del(&dev->cdev);
     
     /* Giải phóng major/minor number */

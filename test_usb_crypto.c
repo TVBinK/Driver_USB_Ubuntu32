@@ -1,9 +1,3 @@
-/*
- * Chương trình test cho driver USB Caesar Cipher
- * Biên dịch: gcc -o test_usb_crypto test_usb_crypto.c
- * Sử dụng: ./test_usb_crypto
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
